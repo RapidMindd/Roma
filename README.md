@@ -3,7 +3,7 @@
 C++ выполняет размытие, Python загружает и сохраняет изображения через Pillow,
 передаёт массивы NumPy в динамическую библиотеку через ctypes.
 
-Текущий этап: Оптимизация SIMD. Вариант по умолчанию: `simd_o3`.
+Текущий этап: Выравнивание памяти. Вариант по умолчанию: `aligned_o0`.
 
 Используется ядро 3×3 `[1, 2, 1; 2, 4, 2; 1, 2, 1] / 16`.
 Два прохода по строкам и столбцам дают ту же свёртку. На границах повторяется
@@ -26,8 +26,8 @@ make test
 python3 main.py benchmark --width 64 --height 48 --iterations 2
 ```
 
-Доступные варианты: `scalar_o0`, `scalar_o3`, `simd_o0`, `simd_o3`.
-Выбор: `python3 main.py blur input.jpg output.png --variant simd_o3`.
+Доступные варианты: `scalar_o0`, `scalar_o3`, `simd_o0`, `simd_o3`, `aligned_o0`.
+Выбор: `python3 main.py blur input.jpg output.png --variant aligned_o0`.
 Библиотеки находятся в `build/`. `libgaussian_blur.so` содержит текущую версию.
 
 Полный замер из отчёта запускается отдельно:

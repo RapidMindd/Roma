@@ -12,11 +12,11 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parent
-VARIANTS = ('scalar_o0', 'scalar_o3', 'simd_o0', 'simd_o3')
+VARIANTS = ('scalar_o0', 'scalar_o3', 'simd_o0', 'simd_o3', 'aligned_o0')
 
 
 class GaussianBlur:
-    def __init__(self, variant="simd_o3"):
+    def __init__(self, variant="aligned_o0"):
         if variant not in VARIANTS:
             raise ValueError("Unknown variant")
         self.library = ctypes.CDLL(str(ROOT / "build" / f"libgaussian_blur_{variant}.so"))
@@ -108,7 +108,7 @@ def main():
     blur = commands.add_parser("blur", help="Blur an RGB image")
     blur.add_argument("input", type=Path)
     blur.add_argument("output", type=Path)
-    blur.add_argument("--variant", choices=VARIANTS, default="simd_o3")
+    blur.add_argument("--variant", choices=VARIANTS, default="aligned_o0")
     blur.add_argument("--iterations", type=positive, default=1)
     blur.add_argument("--threads", type=positive, default=min(4, os.cpu_count() or 1))
     bench = commands.add_parser("benchmark", help="Compare available implementations")

@@ -9,6 +9,9 @@
 #ifndef VECTOR
 #define VECTOR 0
 #endif
+#ifndef ALIGNED
+#define ALIGNED 0
+#endif
 
 using Vec = float __attribute__((vector_size(16), may_alias));
 
@@ -25,9 +28,17 @@ static void filter_row(const float *a, const float *b, const float *c,
     std::size_t i = begin;
 #if VECTOR
     for (; i + 4 <= end; i += 4) {
+#if ALIGNED
+        Vec middle = *reinterpret_cast<const Vec *>(b + i);
+#else
         Vec middle = load(b + i);
+#endif
         Vec value = (load(a + i) + middle * 2.0f + load(c + i)) * 0.25f;
+#if ALIGNED
+        *reinterpret_cast<Vec *>(out + i) = value;
+#else
         std::memcpy(out + i, &value, sizeof(value));
+#endif
     }
 #endif
     for (; i < end; ++i) {
@@ -46,21 +57,24 @@ extern "C" int gaussian_blur(const float *input, float *output, int width,
         return 1;
     }
     const std::size_t row = static_cast<std::size_t>(width) * 3;
-    const std::size_t stride = row;
+    const std::size_t stride = (row + 15) / 16 * 16;
     if (static_cast<std::size_t>(height) > (limit - 16) / stride) {
         return 1;
     }
     const std::size_t count = stride * height + 16;
     using Buffer = std::unique_ptr<float, decltype(&std::free)>;
     auto allocate = [count]() {
-        void *p = std::malloc(count * sizeof(float));
+        void *p = nullptr;
+        if (posix_memalign(&p, 64, count * sizeof(float)) != 0) {
+            return Buffer(nullptr, &std::free);
+        }
         return Buffer(static_cast<float *>(p), &std::free);
     };
     Buffer first = allocate(), second = allocate(), temporary = allocate();
     if (!first || !second || !temporary) {
         return 2;
     }
-    const int offset = 1;
+    const int offset = ALIGNED ? 0 : 1;
     float *src = first.get() + offset;
     float *dst = second.get() + offset;
     float *tmp = temporary.get() + offset;
