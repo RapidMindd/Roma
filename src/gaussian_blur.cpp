@@ -2,14 +2,34 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <memory>
 
+#ifndef VECTOR
+#define VECTOR 0
+#endif
+
+using Vec = float __attribute__((vector_size(16), may_alias));
+
+static Vec load(const float *p)
+{
+    Vec value;
+    std::memcpy(&value, p, sizeof(value));
+    return value;
+}
 
 static void filter_row(const float *a, const float *b, const float *c,
                        float *out, std::size_t begin, std::size_t end)
 {
     std::size_t i = begin;
+#if VECTOR
+    for (; i + 4 <= end; i += 4) {
+        Vec middle = load(b + i);
+        Vec value = (load(a + i) + middle * 2.0f + load(c + i)) * 0.25f;
+        std::memcpy(out + i, &value, sizeof(value));
+    }
+#endif
     for (; i < end; ++i) {
         out[i] = (a[i] + 2.0f * b[i] + c[i]) * 0.25f;
     }
@@ -40,7 +60,7 @@ extern "C" int gaussian_blur(const float *input, float *output, int width,
     if (!first || !second || !temporary) {
         return 2;
     }
-    const int offset = 0;
+    const int offset = 1;
     float *src = first.get() + offset;
     float *dst = second.get() + offset;
     float *tmp = temporary.get() + offset;
