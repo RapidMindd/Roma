@@ -1,9 +1,4 @@
-ifeq ($(shell uname -s),Darwin)
-CXX = g++-16
-else
 CXX = g++
-endif
-PYTHON ?= python3
 BASE = -std=c++17 -Wall -Wextra -Wpedantic -Wno-unused-function -fPIC -ffp-contract=off
 NOVEC = -fno-tree-vectorize -fno-tree-slp-vectorize
 OPT = -O3 -march=native
@@ -31,11 +26,11 @@ build/libgaussian_blur.so: build/libgaussian_blur_parallel.so
 	cp $< $@
 
 build/test_%: tests/test_blur.cpp build/libgaussian_blur_%.so
-	$(CXX) $(BASE) -O2 -Isrc $< -Lbuild -lgaussian_blur_$* -Wl,-rpath,'$(CURDIR)/build' -o $@
+	$(CXX) $(BASE) -O2 -Isrc $< -Lbuild -lgaussian_blur_$* -Wl,-rpath,'$$ORIGIN' -o $@
 
 test: all $(addprefix build/test_,$(VARIANTS))
 	@set -e; for variant in $(VARIANTS); do echo "Testing $$variant"; ./build/test_$$variant; done
-	$(PYTHON) -m unittest discover -s tests -p 'test_*.py' -v
+	python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 clean:
 	rm -rf build

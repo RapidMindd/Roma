@@ -12,7 +12,10 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parent
-VARIANTS = ('scalar_o0', 'scalar_o3', 'simd_o0', 'simd_o3', 'aligned_o0', 'aligned_o3', 'parallel')
+VARIANTS = (
+    "scalar_o0", "scalar_o3", "simd_o0", "simd_o3",
+    "aligned_o0", "aligned_o3", "parallel",
+)
 
 
 class GaussianBlur:
@@ -111,7 +114,7 @@ def main():
     blur.add_argument("--variant", choices=VARIANTS, default="parallel")
     blur.add_argument("--iterations", type=positive, default=1)
     blur.add_argument("--threads", type=positive, default=min(4, os.cpu_count() or 1))
-    bench = commands.add_parser("benchmark", help="Compare available implementations")
+    bench = commands.add_parser("benchmark", help="Compare all seven implementations")
     bench.add_argument("--input", type=Path)
     bench.add_argument("--width", type=positive, default=1920)
     bench.add_argument("--height", type=positive, default=1080)
