@@ -1,0 +1,11 @@
+*
+!Dockerfile
+!Makefile
+!requirements.txt
+!main.py
+!demo.py
+!src/
+!src/**
+!tests/
+!tests/*.py
+!tests/*.cpp

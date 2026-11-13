@@ -4,6 +4,70 @@
 вариантов из предоставленного отчёта: C++-библиотеки, Python-программа
 с `ctypes`, чтение и сохранение изображений, сравнение производительности.
 
+## Быстрый старт
+
+Нужны Git, GCC C++ с OpenMP, make и Python 3.10 или новее.
+Установка системных пакетов:
+
+```bash
+# Debian / Ubuntu
+sudo apt update
+sudo apt install git g++ make python3 python3-pip python3-venv
+
+# Fedora
+sudo dnf install git gcc-c++ make python3 python3-pip
+
+# macOS с Homebrew
+brew install gcc python make
+```
+
+Выполните команды для своей ОС, затем:
+
+```bash
+git clone https://github.com/RapidMindd/Roma.git
+cd Roma
+./setup.sh
+./run.sh
+```
+
+`setup.sh` создаёт `.venv`, устанавливает NumPy и Pillow, пересобирает
+все библиотеки. На macOS автоматически выбирается Homebrew GCC.
+При первом запуске нужен интернет для загрузки Python-зависимостей.
+`run.sh` без аргументов создаёт пример и размывает его. Результаты:
+`results/demo_input.png` и `results/demo_blurred.png`.
+
+```bash
+./run.sh blur photo.jpg results/photo_blurred.png
+./run.sh benchmark --width 320 --height 180 --iterations 10
+./run.sh benchmark --threads 4
+PATH="$PWD/.venv/bin:$PATH" make test CXX="$(cat .venv/compiler)"
+```
+
+Полный benchmark может занять несколько минут. Готовые бинарники не хранятся
+в Git: они собираются под вашу систему. Для Windows используйте WSL2 с Ubuntu
+или Docker. Автоматическая проверка Linux настроена в GitHub Actions.
+
+## Запуск через Docker
+
+Если установлен и запущен Docker, локальные GCC и Python не нужны:
+
+```bash
+docker build -t roma-blur .
+mkdir -p results
+docker run --rm -v "$PWD/results:/app/results" roma-blur
+docker run --rm -v "$PWD/results:/app/results" roma-blur python3 main.py benchmark --width 320 --height 180 --iterations 10
+```
+
+Для своего изображения поместите его в `results/input.jpg` и выполните:
+
+```bash
+docker run --rm -v "$PWD/results:/app/results" roma-blur python3 main.py blur results/input.jpg results/output.png
+```
+
+В Docker используется `-O3` без `-march=native`, чтобы образ можно было
+переносить между процессорами одной архитектуры. Сборка образа включает тесты.
+Сам Docker-вариант пока не проверен локально: Docker daemon недоступен.
+
 ## Техническое задание
 
 Инструментальная и целевая платформы: GNU/Linux, GCC, Python 3.
