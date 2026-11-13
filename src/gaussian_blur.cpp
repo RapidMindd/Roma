@@ -12,6 +12,9 @@
 #ifndef ALIGNED
 #define ALIGNED 0
 #endif
+#ifndef PARALLEL
+#define PARALLEL 0
+#endif
 
 using Vec = float __attribute__((vector_size(16), may_alias));
 
@@ -82,6 +85,9 @@ extern "C" int gaussian_blur(const float *input, float *output, int width,
         std::copy_n(input + y * row, row, src + y * stride);
     }
     for (int iteration = 0; iteration < iterations; ++iteration) {
+#if PARALLEL
+#pragma omp parallel for num_threads(threads) schedule(static)
+#endif
         for (int y = 0; y < height; ++y) {
             const float *s = src + y * stride;
             float *t = tmp + y * stride;
@@ -96,6 +102,9 @@ extern "C" int gaussian_blur(const float *input, float *output, int width,
                 t[i] = (s[i - 3] + 2.0f * s[i] + s[i]) * 0.25f;
             }
         }
+#if PARALLEL
+#pragma omp parallel for num_threads(threads) schedule(static)
+#endif
         for (int y = 0; y < height; ++y) {
             filter_row(tmp + std::max(y - 1, 0) * stride, tmp + y * stride,
                        tmp + std::min(y + 1, height - 1) * stride,
